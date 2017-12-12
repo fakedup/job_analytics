@@ -1,10 +1,10 @@
-from sqlalchemy import create_engine, Column, Integer, String, DateTime
+from sqlalchemy import create_engine, Column, Integer, String, DateTime, ForeignKey
 from sqlalchemy.orm import scoped_session, sessionmaker
 from sqlalchemy.ext.declarative import declarative_base
 import datetime
 import os.path
 
-db_path = 'db/vacancies.db'
+db_path = 'db/hh_base.db'
 engine = create_engine('sqlite:///'+db_path)
 
 db_session = scoped_session(sessionmaker(bind=engine))
@@ -16,7 +16,7 @@ class Vacancy(Base):
     __tablename__ = 'vacancies'
     id = Column(Integer, primary_key=True)
     title = Column(String(100))
-    city = Column(String(50))
+    area = Column(Integer, ForeignKey('areas.id'))
     description = Column(String(1000))
     salary_from = Column(Integer)
     salary_to = Column(Integer)
@@ -36,14 +36,42 @@ class Vacancy(Base):
     def __repr__(self):
         return '<{}, {}, {} - {}>'.format(self.title, self.city, self.salary_from, self.salary_to)
 
-def add_vacancy_data (id, title, city, description, salary_from, salary_to, publish_date, db_session = db_session,):
-    db_session.add(Vacancy(id, title, city, description, salary_from, salary_to, publish_date))
-    db_session.commit()
+class Area(Base):
+    __tablename__ = 'areas'
+    id = Column(Integer, primary_key=True)
+    parent_id = Column(Integer, ForeignKey('areas.id'))
+    name = Column(String(50))
+
+    def __init__(self, id, parent_id, name):
+        self.id = id
+        self.parent_id = parent_id
+        self.name = name
+
+    def __repr__(self):
+        return 'Area: ({}) {}'.format(self.id, self.name)
+
+class Industry(Base):
+    __tablename__ = 'industries'
+    id = Column(Integer, primary_key=True)
+    parent_id = Column(Integer, ForeignKey('industries.id'))
+    name = Column(String(50))
+
+    def __init__(self, id, parent_id, name):
+        self.id = id
+        self.parent_id = parent_id
+        self.name = name
+
+    def __repr__(self):
+        return 'Industry: ({}) {}'.format(self.id, self.name)
+
+# class VacancyIndustry(Base):
+#     __tablename__ = 'vacancies_industries'
+#     vacancy_id = Column(Integer, ForeignKey('vacancies.id'))
+#     industry_id = Column(Integer, ForeignKey('industries.id'))
+
+#     def __init__(self, vacancy_id, industry_id):
+#         self.vacancy_id = vacancy_id
+#         self.industry_id = industry_id
 
 if __name__ == "__main__":
-
-    if os.path.exists(db_path):
-        print ('Database exists already. Skip creating.')
-    else:
-        Base.metadata.create_all(bind=engine)
-        print ('Database created.')
+    Base.metadata.create_all(bind=engine)
