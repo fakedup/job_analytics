@@ -1,6 +1,7 @@
 import requests
 import json
 from db import db_session, Vacancy, Area, Industry
+import sqlalchemy.exc
 
 base_url = 'https://api.hh.ru/'
 
@@ -29,23 +30,3 @@ def get_vacancies_ids (datefrom, dateto, search_item, base_url = base_url+'vacan
         for item in current_search:
             ids.append(item['id'])
     return ids
-
-def get_areas():
-    null = None
-    def handle_area(areas_list):
-        for item in areas_list:
-            yield (item.get('id'), item.get('parent_id'), item.get('name'))
-            if len(item.get('areas'))>0:
-                areas_list += item.get('areas')
-
-    request = requests.get(base_url+'areas', headers = headers)
-    areas_list = json.loads(request.text)
-
-    for an_area in handle_area(areas_list):
-        area_to_add = Area(id = an_area[0], parent_id = an_area[1], name = an_area[2])
-        db_session.add(area_to_add)
-    db_session.commit()
-
-
-if __name__ == '__main__':
-    get_areas()
