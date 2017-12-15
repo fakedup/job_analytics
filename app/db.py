@@ -1,4 +1,4 @@
-from sqlalchemy import create_engine, Column, Integer, String, DateTime, ForeignKey
+from sqlalchemy import create_engine, Column, Integer, String, DateTime, ForeignKey, Boolean
 from sqlalchemy.orm import scoped_session, sessionmaker
 from sqlalchemy.ext.declarative import declarative_base
 import datetime
@@ -20,6 +20,7 @@ class Vacancy(Base):
     description = Column(String(1000))
     salary_from = Column(Integer)
     salary_to = Column(Integer)
+    salary_gross = Column(Boolean)
     published_at = Column(DateTime)
     experience = Column(String(15))
     employment = Column(String(10))
@@ -28,14 +29,16 @@ class Vacancy(Base):
 
     def __init__(self, id, title = None, area = None, 
                 description = None, salary_from = None,
-                salary_to = None, published_at = None,
-                experience = None, employment = None, employer = None):
+                salary_to = None, salary_gross = None, 
+                published_at = None, experience = None, 
+                employment = None, employer = None):
         self.id = id
         self.title = title
         self.area = area
         self.description = description
         self.salary_from = salary_from
         self.salary_to = salary_to
+        self.salary_gross = salary_gross
         self.published_at = published_at
         self.experience = experience
         self.employment = employment
