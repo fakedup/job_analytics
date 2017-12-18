@@ -4,8 +4,8 @@ from sqlalchemy.ext.declarative import declarative_base
 import datetime
 import os.path
 
-db_path = 'db/hh_base.db'
-engine = create_engine('sqlite:///'+db_path)
+db_path = 'hh_base.db'
+engine = create_engine('sqlite:///' + db_path)
 
 db_session = scoped_session(sessionmaker(bind=engine))
 
@@ -92,6 +92,15 @@ class KeySkills(Base):
     def __init__ (self, vacancy_id, skill):
         self.vacancy_id = vacancy_id
         self.skill = skill
+
+
+def recreate_db():
+    try:
+        os.remove(db_path)
+    except OSError as exc:
+        print(exc)
+        pass
+    Base.metadata.create_all(bind=engine)
 
 
 if __name__ == "__main__":
