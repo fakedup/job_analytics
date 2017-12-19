@@ -93,6 +93,14 @@ class KeySkills(Base):
         self.vacancy_id = vacancy_id
         self.skill = skill
 
+def recreate_db():
+    try:
+        os.remove(db_path)
+    except OSError as exc:
+        print(exc)
+        pass
+    Base.metadata.create_all(bind=engine)
+
 
 if __name__ == "__main__":
     Base.metadata.create_all(bind=engine)
