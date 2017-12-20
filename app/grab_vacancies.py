@@ -125,7 +125,58 @@ def put_vacancies_range(start_id, number_to_put=1000, commit_each=100):
 
     print('Added {} vacancies.'.format(vacancies_added))
 
+def put_vacancies_range_2(start_id, number_to_put, commit_each):
+    # Параллелим обращения к api hh.ru
 
+    vacancy_ids = list(range(start_id, start_id + number_to_put))
+    
+    vacancy_dicts = []
+
+    def getter():
+        try:
+            while True:
+                vacancy_id = vacancy_ids.pop()
+                vacancy_dict = get_vacancy_dict(vacancy_id)
+                if vacancy_dict:
+                    vacancy_dicts.append(vacancy_dict)
+        except IndexError:
+            pass
+
+    getter_threads = []
+
+    for i in range(4):
+        getter_thread = threading.Thread(target=getter)
+        getter_threads.append(getter_thread)
+
+    for thread in getter_threads:
+        thread.start()
+
+    counter = 0
+    vacancies_added = 0
+
+    while any(t.isAlive() for t in getter_threads) or vacancy_dicts:
+        if vacancy_dicts:
+            inc = 0
+            vacancy_dict = vacancy_dicts.pop()
+            vacancy_attrs = parse_vacancy(vacancy_dict)
+            if vacancy_attrs:
+                if not Vacancy.query.filter(Vacancy.id == vacancy_attrs[0]).first():
+                    vacancy_to_add = Vacancy(*vacancy_attrs)
+                    db_session.add(vacancy_to_add)
+                    inc = 1
+            vacancies_added += inc
+            counter += inc
+            if counter == commit_each:
+                db_session.commit()
+                print('Added {} vacancies.'.format(vacancies_added))
+                counter = 0
+    else:
+        db_session.commit()
+
+    print('Added {} vacancies.'.format(vacancies_added))
+
+    for thread in getter_threads:
+        thread.join()
 
 # def put_vacancies_range_threads(start_id, number_to_put=1000, threads_number=4):
 #     threads = []
@@ -144,12 +195,12 @@ def grab(putter=put_vacancies_range, recreate = False):
     if recreate:
         from db import recreate_db
         recreate_db()  # Пересоздаем базу данных
-    get_areas()
+    # get_areas()
     current_max_id = db_session.query(func.max(Vacancy.id)).scalar() or 9000000
-    putter(current_max_id, number_to_put=100, commit_each=100)
+    putter(current_max_id, number_to_put=10000, commit_each=500)
 
 
 
 if __name__ == '__main__':
     
-    grab()
+    grab(put_vacancies_range_2)
