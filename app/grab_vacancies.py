@@ -12,7 +12,7 @@ base_url = 'https://api.hh.ru/vacancies/'
 
 headers = {
     'User-Agent':'test job analytics (sokolov.nikita@gmail.com)',
-    'Authorization':'Bearer V1CFTBLRP08MMF4UR2209C8LSVJ8E5J9QF96LTO6CEEG10EF513NEIJNAK6TN4TR'
+    'Authorization':'Bearer S5VFSOMAU7JP6B3SUBE0C1CA3MQ7RSRQI70AAEOQR7J66J5JTSNGQ2SI5GQE90E0'
 }
 
 # def get_vacancies_ids (datefrom, dateto, search_item, base_url = base_url+'vacancies'):
@@ -144,7 +144,7 @@ def put_vacancies_range_2(start_id, number_to_put, commit_each):
 
     getter_threads = []
 
-    for i in range(4):
+    for i in range(20):
         getter_thread = threading.Thread(target=getter)
         getter_threads.append(getter_thread)
 
@@ -168,7 +168,8 @@ def put_vacancies_range_2(start_id, number_to_put, commit_each):
             counter += inc
             if counter == commit_each:
                 db_session.commit()
-                print('Added {} vacancies.'.format(vacancies_added))
+                current_time = datetime.now().strftime('%H:%M:%S')
+                print('{}: Added {} vacancies.'.format(current_time, vacancies_added))
                 counter = 0
     else:
         db_session.commit()
@@ -197,7 +198,8 @@ def grab(putter=put_vacancies_range, recreate = False):
         recreate_db()  # Пересоздаем базу данных
     # get_areas()
     current_max_id = db_session.query(func.max(Vacancy.id)).scalar() or 9000000
-    putter(current_max_id, number_to_put=10000, commit_each=500)
+    print (current_max_id)
+    putter(current_max_id, number_to_put=1000000, commit_each=500)
 
 
 
