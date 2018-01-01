@@ -15,27 +15,6 @@ headers = {
     'Authorization':'Bearer S5VFSOMAU7JP6B3SUBE0C1CA3MQ7RSRQI70AAEOQR7J66J5JTSNGQ2SI5GQE90E0'
 }
 
-# def get_vacancies_ids (datefrom, dateto, search_item, base_url = base_url+'vacancies'):
-#     ids = []
-#     per_page = 50
-#     page = 0
-#     count = per_page
-#     while count > 0:
-#         options = ('?text={}&date_from={}&date_to={}&per_page={}&page={}&no_magic=true'.
-#                     format (search_item, datefrom, dateto, per_page, page))
-#         try:
-#             request = requests.get(base_url+options, headers = headers)
-#             print (request.text)
-#             print (request)
-#             current_search = json.loads(request.text)['items']
-#         except KeyError:
-#             current_search = []
-#         count = len(current_search)
-#         page += 1
-#         for item in current_search:
-#             ids.append(item['id'])
-#     return ids
-
 def get_vacancy_dict(id):
     request = requests.get(base_url + str(id), headers=headers)
 
@@ -48,7 +27,6 @@ def get_vacancy_dict(id):
 
 def parse_vacancy(vacancy_dict, area_filter=('1', '2')):
     name = vacancy_dict['name']
-    # print (name)
     if vacancy_dict['area']['id'] in area_filter or len(area_filter) == 0:
         area = int(vacancy_dict['area']['id'])
         description = BeautifulSoup(vacancy_dict['description'], "lxml").text
@@ -179,18 +157,6 @@ def put_vacancies_range_2(start_id, number_to_put, commit_each):
     for thread in getter_threads:
         thread.join()
 
-# def put_vacancies_range_threads(start_id, number_to_put=1000, threads_number=4):
-#     threads = []
-#     for i in range(threads_number):
-#         print (i)
-#         one_thread = threading.Thread(target = put_vacancies_range, args = (start_id + i * number_to_put, number_to_put ))
-#         threads.append(one_thread)
-
-#     for i in range(threads_number):
-#         threads[i].start()
-
-#     for i in range(threads_number):
-#         threads[i].join()
 
 def grab(putter=put_vacancies_range, recreate = False):
     if recreate:
