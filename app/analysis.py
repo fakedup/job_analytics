@@ -1,8 +1,10 @@
 from db import db_session, Vacancy
 from sqlalchemy import or_
 import pandas as pd
+import numpy as np
 import datetime as dt
 import matplotlib.pyplot as plt
+from sqlalchemy import func
 
 # Reminder for table columns:
 # title. area, description, salary_from, salary_to, salary_gross, published_at, experience, employment, employer
@@ -17,8 +19,8 @@ def get_vacancies_query(date_from, date_to, keywords, regions, search_fields):
             Vacancy.area.in_(regions),
             Vacancy.published_at >= dt.datetime.strptime(date_from, '%Y-%m-%d'),
             Vacancy.published_at <= dt.datetime.strptime(date_to, '%Y-%m-%d'),
-            or_(*(Vacancy.description.like('%{}%'.format(keyword)) for keyword in keywords),
-                *(Vacancy.title.like('%{}%'.format(keyword)) for keyword in keywords))
+            or_(*(func.lower(Vacancy.description).like('%{}%'.format(keyword.lower())) for keyword in keywords),  # Кириллица в SQLite не переводится в нижний регистр
+                *(func.lower(Vacancy.title).like('%{}%'.format(keyword.lower())) for keyword in keywords))
         ).statement
 
     else:  # search_fields == 'title':
@@ -26,7 +28,7 @@ def get_vacancies_query(date_from, date_to, keywords, regions, search_fields):
         Vacancy.area.in_(regions),
         Vacancy.published_at >= dt.datetime.strptime(date_from, '%Y-%m-%d'),
         Vacancy.published_at <= dt.datetime.strptime(date_to, '%Y-%m-%d'),
-        or_(*(Vacancy.title.like('%{}%'.format(keyword)) for keyword in keywords))
+        or_(*(func.lower(Vacancy.title).like('%{}%'.format(keyword.lower())) for keyword in keywords))
         ).statement
 
     return query
@@ -82,8 +84,27 @@ def main_analysis(date_from, date_to, keywords, regions = [1, 2], search_fields 
         )
     plt.savefig('bar.png')
 
+    def min_greater_zero (x):
+        try:
+            return min(i for i in x if i>0)
+        except ValueError:
+            return 0
+
+    # pivot table by titles and months with count, min, med, max salary
+    pivot = pd.pivot_table(vacancies, 
+        values = 'salary', 
+        index = ['title', 'YearMonth'],
+        fill_value = 0, 
+        aggfunc = [len, 
+        min_greater_zero,  
+        lambda x: np.median([i for i in x if i>0]),
+        max])
+    pivot = pivot.sort_values([('len', 'salary')], ascending = False )
+
+    print (pivot[:5])
+
 
 
 if __name__ == '__main__':
 
-    main_analysis ('2010-01-01','2017-12-31', ['менеджер'])
+    main_analysis ('2017-09-01','2017-09-30', ['Программист'], search_fields = 'title')
