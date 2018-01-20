@@ -5,15 +5,19 @@ import numpy as np
 import datetime as dt
 import matplotlib.pyplot as plt
 from sqlalchemy import func
+import mpld3
 
 # Reminder for table columns:
 # title. area, description, salary_from, salary_to, salary_gross, published_at, experience, employment, employer
+# args = (regions, datetime.strptime(date_from, '%Y-%m-%d'), date_to, keywords)
 
 def get_vacancies_query(date_from, date_to, keywords, regions, search_fields):
 
-    # SELECT * FROM vacancy WHERE text LIKE '%Python%' OR text LIKE '%Django%';
-    # args = (regions, datetime.strptime(date_from, '%Y-%m-%d'), date_to, keywords)
+    '''
+    Возвращает sql-запрос со всеми параметрами для передачи в бд
+    '''
 
+    # В зависимости от набора полей, в которых искать: только заголовок или заголовок+описание
     if search_fields == 'all':
         query = Vacancy.query.filter(
             Vacancy.area.in_(regions),
@@ -33,7 +37,10 @@ def get_vacancies_query(date_from, date_to, keywords, regions, search_fields):
 
     return query
 
-def get_vacancies_df (query, session):
+def get_vacancies_df (query, session = db_session):
+    '''
+    Возвращает dataframe, соответствующий переданному запросу
+    '''
 
     def calc_avg_salary(row):
         if pd.isnull(row['salary_from'])  and pd.isnull(row['salary_to']):
@@ -57,32 +64,62 @@ def get_vacancies_df (query, session):
 
     return df
 
-def main_analysis(date_from, date_to, keywords, regions = [1, 2], search_fields = 'all'):
+def get_number_vacancies_plot (df, keywords):
 
-    vacancies = get_vacancies_df (
-        get_vacancies_query (date_from, date_to, keywords, regions, search_fields), 
-        db_session)
-
-    # number of vacancies plot
-    sample = vacancies['salary'].groupby(vacancies['YearMonth']).count()
-    title = 'Number of vacancies by months with keywords: ' + ', '.join(keywords)
-    number_vacancies_bar = sample.plot(
-        kind="bar", 
-        title=title, 
-        color='blue', 
-        figsize = (12, 8)
-        )
-    plt.savefig('foo.png')
+    # Построение гистограммы с количеством вакансий по месяцам
+    # Создание набора данных для графика: период - количество
+    plot_data = df['title'].groupby(df['YearMonth']).count()
     
-    # salaries boxplot
-    salaries_boxplot = vacancies[vacancies.salary>0].boxplot(
-        column = 'salary', 
-        by = 'YearMonth',
-        rot = 90,
-        figsize = (12, 8),
-        grid = False
-        )
-    plt.savefig('bar.png')
+    #Создание фигуры
+    fig = plt.figure()
+
+    # Добавление заголовка
+    title = 'Number of vacancies with keywords: ' + ', '.join(keywords)
+    plt.title (title)
+
+    # Добавление самого графика
+    plt.bar(plot_data.index.values, plot_data.values)
+
+    # Возвращается html с графиком
+    return mpld3.fig_to_html(fig)
+
+def get_salaries_boxplot (df):
+
+    # Построение боксплота зарплат по месяцам
+
+    fig = plt.figure()
+
+    # salaries_boxplot = df[df.salary>0].boxplot(
+    #     column = 'salary', 
+    #     by = 'YearMonth',
+    #     rot = 90,
+    #     figsize = (12, 8),
+    #     grid = False
+    #     )
+
+    # plt.savefig('bar.png')
+    # new_df = df.reindex(axis = 'YearMonth')
+    # print (new_df)
+
+    data = []
+
+    labels = sorted(df.YearMonth.unique())
+
+    print (labels)
+
+    for ym in labels:
+        data.append(df[(df.YearMonth == ym) & (df.salary>0)].salary)
+
+    # print (data)
+
+    # plt.boxplot(df['salary'][df.salary>0])
+    plt.boxplot(data)
+
+    plt.xticks(np.arange(len(labels)), labels, rotation=90)
+
+    return mpld3.fig_to_html(fig)
+
+def get_titles_pivot (df):
 
     def min_greater_zero (x):
         try:
@@ -91,20 +128,39 @@ def main_analysis(date_from, date_to, keywords, regions = [1, 2], search_fields 
             return 0
 
     # pivot table by titles and months with count, min, med, max salary
-    pivot = pd.pivot_table(vacancies, 
+    pivot = pd.pivot_table(df, 
         values = 'salary', 
         index = ['title', 'YearMonth'],
         fill_value = 0, 
         aggfunc = [len, 
         min_greater_zero,  
-        lambda x: np.median([i for i in x if i>0]),
+        np.median,
         max])
     pivot = pivot.sort_values([('len', 'salary')], ascending = False )
 
-    print (pivot[:5])
+    return pivot
+
+
+def main_analysis(date_from, date_to, keywords, regions = [1, 2], search_fields = 'all'):
+
+    vacancies = get_vacancies_df (
+        get_vacancies_query (date_from, date_to, keywords, regions, search_fields), 
+        db_session)
+
+    # get_number_vacancies_plot (vacancies, keywords)
+    with open('nv.html', 'w') as nv_file:
+        nv_file.write(get_number_vacancies_plot (vacancies, keywords)) 
+
+
+    with open('bp.html', 'w') as nv_file:
+        nv_file.write(get_salaries_boxplot (vacancies)) 
+
+    # get_salaries_boxplot (vacancies)
+
+    # print (get_titles_pivot(vacancies))
 
 
 
 if __name__ == '__main__':
 
-    main_analysis ('2017-09-01','2017-09-30', ['Программист'], search_fields = 'title')
+    main_analysis ('2010-09-01','2017-09-30', ['а'], search_fields = 'title')
