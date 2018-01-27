@@ -1,4 +1,5 @@
-from db import db_session, Vacancy
+from .db import Vacancy
+from .db import db_session as dbs
 from sqlalchemy import or_
 import pandas as pd
 import numpy as np
@@ -23,21 +24,24 @@ def get_vacancies_query(date_from, date_to, keywords, regions, search_fields):
             Vacancy.area.in_(regions),
             Vacancy.published_at >= dt.datetime.strptime(date_from, '%Y-%m-%d'),
             Vacancy.published_at <= dt.datetime.strptime(date_to, '%Y-%m-%d'),
-            or_(*(func.lower(Vacancy.description).like('%{}%'.format(keyword.lower())) for keyword in keywords),  # Кириллица в SQLite не переводится в нижний регистр
-                *(func.lower(Vacancy.title).like('%{}%'.format(keyword.lower())) for keyword in keywords))
+            or_(*(Vacancy.description.like('%{}%'.format(keyword)) for keyword in keywords),
+                *(Vacancy.description.like('%{}%'.format(keyword.lower())) for keyword in keywords),  # Кириллица в SQLite не переводится в нижний регистр
+                *(Vacancy.title.like('%{}%'.format(keyword)) for keyword in keywords),
+                *(Vacancy.title.like('%{}%'.format(keyword.lower())) for keyword in keywords))
         ).statement
 
     else:  # search_fields == 'title':
         query = Vacancy.query.filter(
-        Vacancy.area.in_(regions),
-        Vacancy.published_at >= dt.datetime.strptime(date_from, '%Y-%m-%d'),
-        Vacancy.published_at <= dt.datetime.strptime(date_to, '%Y-%m-%d'),
-        or_(*(func.lower(Vacancy.title).like('%{}%'.format(keyword.lower())) for keyword in keywords))
+            Vacancy.area.in_(regions),
+            Vacancy.published_at >= dt.datetime.strptime(date_from, '%Y-%m-%d'),
+            Vacancy.published_at <= dt.datetime.strptime(date_to, '%Y-%m-%d'),
+            or_(*(Vacancy.title.like('%{}%'.format(keyword)) for keyword in keywords),
+                *(Vacancy.title.like('%{}%'.format(keyword.lower())) for keyword in keywords))
         ).statement
 
     return query
 
-def get_vacancies_df (query, session = db_session):
+def get_vacancies_df (query, session = dbs):
     '''
     Возвращает dataframe, соответствующий переданному запросу
     '''
@@ -89,18 +93,6 @@ def get_salaries_boxplot (df):
 
     fig = plt.figure()
 
-    # salaries_boxplot = df[df.salary>0].boxplot(
-    #     column = 'salary', 
-    #     by = 'YearMonth',
-    #     rot = 90,
-    #     figsize = (12, 8),
-    #     grid = False
-    #     )
-
-    # plt.savefig('bar.png')
-    # new_df = df.reindex(axis = 'YearMonth')
-    # print (new_df)
-
     data = []
 
     labels = sorted(df.YearMonth.unique())
@@ -110,9 +102,6 @@ def get_salaries_boxplot (df):
     for ym in labels:
         data.append(df[(df.YearMonth == ym) & (df.salary>0)].salary)
 
-    # print (data)
-
-    # plt.boxplot(df['salary'][df.salary>0])
     plt.boxplot(data)
 
     plt.xticks(np.arange(len(labels)), labels, rotation=90)
@@ -145,22 +134,20 @@ def main_analysis(date_from, date_to, keywords, regions = [1, 2], search_fields 
 
     vacancies = get_vacancies_df (
         get_vacancies_query (date_from, date_to, keywords, regions, search_fields), 
-        db_session)
+        dbs)
 
-    # get_number_vacancies_plot (vacancies, keywords)
     with open('nv.html', 'w') as nv_file:
         nv_file.write(get_number_vacancies_plot (vacancies, keywords)) 
 
 
     with open('bp.html', 'w') as nv_file:
-        nv_file.write(get_salaries_boxplot (vacancies)) 
+        nv_file.write(get_salaries_boxplot (vacancies))
 
-    # get_salaries_boxplot (vacancies)
+    print (get_titles_pivot (vacancies))
 
-    # print (get_titles_pivot(vacancies))
 
 
 
 if __name__ == '__main__':
 
-    main_analysis ('2010-09-01','2017-09-30', ['а'], search_fields = 'title')
+    main_analysis ('2017-12-01','2017-12-31', ['Программист'], search_fields = 'title')
