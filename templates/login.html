@@ -1,0 +1,54 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Login</title>
+</head>
+<body>
+
+<!-- Render a WTForm form's field (with it's possible associated errors) from a WTForms form -->
+{% macro render_field(field) %}
+
+  <div class="form-group">
+    <input class="form-control" name="{{ field.name }}" placeholder="{{ field.label.text }}" type="{{ field.type }}" value="{{ field.value }}">
+  <div class="form-group">
+    {% if field.errors %}
+      <ul>
+        {% for error in field.errors %}
+            <li>{{ error }}</li>
+        {% endfor %}
+      </ul>
+    {% endif %}
+{% endmacro %}
+
+  <div>
+    <form action="{{ url_for('login') }}" method="POST">
+      <h4>Login</h4>
+      {{ render_field(form.email) }}
+
+      {{ render_field(form.password) }}
+      {{ form.csrf_token }}
+      <button type="submit">Confirm</button>
+    </form>
+  </div>
+
+
+      <ul>
+        {% for x, y in form.errors.items() %}
+            <li>{{ x }} - {{ y }}</li>
+        {% endfor %}
+      </ul>
+
+  <!-- Message flashing -->
+  {% with messages = get_flashed_messages() %}
+    {% if messages %}
+      <ul>
+        {% for message in messages %}
+            <li>{{ message }}</li>
+        {% endfor %}
+      </ul>
+    {% endif %}
+  {% endwith %}
+
+</body>
+</html>
