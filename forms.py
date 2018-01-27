@@ -12,3 +12,10 @@ class LoginForm(Form):
     password = wtforms.PasswordField(
         validators=[validators.DataRequired()],
         description='Password')
+
+
+class TestForm(Form):
+    name = wtforms.StringField(
+        validators=[validators.DataRequired()],
+        description='Ключевые слова через запятую'
+    )

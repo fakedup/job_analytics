@@ -10,6 +10,7 @@ from sqlalchemy.ext.declarative import declarative_base
 import sqlalchemy as sa
 
 from forms import LoginForm
+from app.analysis import *
 
 app = flask.Flask(__name__)
 app.config.from_object('config')  # !!!!!!!!!!!!!!!!!!!!!!!!!!!#
@@ -65,13 +66,42 @@ class User(Base, UserMixin):
 
 @app.route("/", methods=['GET', 'POST'])
 def index():
-    login_form = LoginForm()
+    login_form = LoginForm() 
     return render_template('index.html', method=request.method, login_form=login_form, date_list=[
             '2000-01-01',
             '2000-01-02',
             '2000-01-03',
         ])
 
+#date_from, date_to, keywords, regions, search_fields
+
+@app.route("/test/", methods=['GET', 'POST'])
+def test():
+    from forms import TestForm
+ 
+    date_from = request.args.get('date_from') or '2017-07-01'
+    date_to = request.args.get('date_to') or '2017-12-31'
+    keywords = request.args.get('keywords').split(',') or ['Программист']
+    regions = [int(x) for x in request.args.get('regions').split(',')] or [1]
+    search_fields = request.args.get('search_fields') or 'title'
+
+    print (request.args)
+
+    vacancies = get_vacancies_df (
+    get_vacancies_query (date_from, date_to, keywords, regions, search_fields), 
+    dbs)
+
+    nv_plot = get_number_vacancies_plot (vacancies, keywords)
+
+    salary_bp = get_salaries_boxplot (vacancies)
+
+    form = TestForm(flask.request.args)
+
+    if form.validate():
+        pass # Генерируем график
+
+    return render_template('test.html', form=form, nv_plot=nv_plot, salary_bp = salary_bp)
+    # return nv_plot
 
 @app.route('/login/', methods=['GET', 'POST'])
 def login():
