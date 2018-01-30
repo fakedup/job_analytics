@@ -97,14 +97,17 @@ def get_salaries_boxplot (df):
 
     labels = sorted(df.YearMonth.unique())
 
+    fig.autofmt_xdate()
+
     print (labels)
 
     for ym in labels:
-        data.append(df[(df.YearMonth == ym) & (df.salary>0)].salary)
+        data.append(df[(df.YearMonth == ym) & (df.salary > 10000)].salary)
+        # data.append(np.nonzero(df[(df.YearMonth == ym)]).salary)
 
     plt.boxplot(data)
 
-    plt.xticks(np.arange(len(labels)), labels, rotation=90)
+    plt.xticks(np.arange(1,len(labels)+1), labels, rotation='vertical')
 
     return mpld3.fig_to_html(fig)
 
@@ -116,38 +119,36 @@ def get_titles_pivot (df):
         except ValueError:
             return 0
 
+    # med = lambda x: np.median(x[np.nonzero(x)])
+
+    def med(x):
+        return np.median([i for i in x if i>0])
+
     # pivot table by titles and months with count, min, med, max salary
     pivot = pd.pivot_table(df, 
         values = 'salary', 
-        index = ['title', 'YearMonth'],
+        index = ['title'],
         fill_value = 0, 
         aggfunc = [len, 
         min_greater_zero,  
-        np.median,
+        med,
         max])
     pivot = pivot.sort_values([('len', 'salary')], ascending = False )
 
     return pivot
 
 
-def main_analysis(date_from, date_to, keywords, regions = [1, 2], search_fields = 'all'):
+# def main_analysis(date_from, date_to, keywords, regions = [1, 2], search_fields = 'all'):
 
-    vacancies = get_vacancies_df (
-        get_vacancies_query (date_from, date_to, keywords, regions, search_fields), 
-        dbs)
+#     vacancies = get_vacancies_df (
+#         get_vacancies_query (date_from, date_to, keywords, regions, search_fields), 
+#         dbs)
 
-    with open('nv.html', 'w') as nv_file:
-        nv_file.write(get_number_vacancies_plot (vacancies, keywords)) 
-
-
-    with open('bp.html', 'w') as nv_file:
-        nv_file.write(get_salaries_boxplot (vacancies))
-
-    print (get_titles_pivot (vacancies))
+#     with open('nv.html', 'w') as nv_file:
+#         nv_file.write(get_number_vacancies_plot (vacancies, keywords)) 
 
 
+#     with open('bp.html', 'w') as nv_file:
+#         nv_file.write(get_salaries_boxplot (vacancies))
 
-
-if __name__ == '__main__':
-
-    main_analysis ('2017-12-01','2017-12-31', ['Программист'], search_fields = 'title')
+#     print (get_titles_pivot (vacancies))
