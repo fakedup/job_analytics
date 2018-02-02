@@ -10,6 +10,8 @@ from sqlalchemy.ext.declarative import declarative_base
 import sqlalchemy as sa
 
 from forms import LoginForm
+from forms import SeachForm
+
 from app.analysis import *
 
 app = flask.Flask(__name__)
@@ -66,18 +68,78 @@ class User(Base, UserMixin):
 
 @app.route("/", methods=['GET', 'POST'])
 def index():
-    login_form = LoginForm() 
-    return render_template('index.html', method=request.method, login_form=login_form, date_list=[
-            '2000-01-01',
-            '2000-01-02',
-            '2000-01-03',
-        ])
+    login_form = LoginForm()
+    seach_form = SeachForm()
+    return render_template('index.html', method=request.method, login_form=login_form, seach_form = seach_form)
 
-#date_from, date_to, keywords, regions, search_fields
+@app.route("/result/", methods=['GET', 'POST'])
+def result():
+    login_form = LoginForm()
+    seach_form = SeachForm()
+    if request.args.get('keywords') is not None:
+        print(seach_form.keywords.data)
+        print(seach_form.region.data)
+        print(seach_form.date_from.data)
+        print(seach_form.date_to.data)
+
+    date_from = request.args.get('date_from') or '2016-09-01'
+    date_to = request.args.get('date_to') or '2017-08-31'
+    
+    try:
+        keywords = request.args.get('keywords').split(',')
+    except AttributeError:
+        keywords = ['Python']
+    
+    try:
+        regions = [int(x) for x in request.args.get('regions').split(',')]
+    except AttributeError:
+        regions = [1]
+    
+    search_fields = request.args.get('search_fields') or 'title'
+
+    vacancies = get_vacancies_df (
+    get_vacancies_query (date_from, date_to, keywords, regions, search_fields), 
+    dbs)
+
+    nv_plot = get_number_vacancies_plot (vacancies, keywords)
+
+    salary_bp = get_salaries_boxplot (vacancies)
+
+    table = get_titles_pivot (vacancies).to_html()
+
+    
+    return render_template(
+            'result.html', 
+            method=request.method, 
+            login_form=login_form,
+            seach_form = seach_form, 
+            nv_plot=nv_plot, 
+            salary_bp = salary_bp, 
+            table = table)
+
+
+@app.route('/login/', methods=['GET', 'POST'])
+def login():
+    form = LoginForm()
+    if form.validate_on_submit():
+        user = db_session.query(User).filter_by(email=form.email.data).first()
+        if user is not None and user.check_password(form.password.data):
+            login_user(user)
+            return redirect(url_for('index'))
+
+        flask.flash('Email or password is wrong.')
+
+    return render_template('login.html', form=form)
+
+
+@app.route('/logout/', methods=['GET', 'POST'])
+def logout():
+    logout_user()
+    return redirect(flask.url_for('index'))
 
 @app.route("/test/", methods=['GET', 'POST'])
 def test():
-    from forms import TestForm
+    # from forms import TestForm
  
     date_from = request.args.get('date_from') or '2016-09-01'
     date_to = request.args.get('date_to') or '2017-08-31'
@@ -106,31 +168,12 @@ def test():
 
     form = TestForm(flask.request.args)
 
-    if form.validate():
-        pass # Генерируем график
+    # if form.validate():
+    #     pass # Генерируем график
 
-    return render_template('test.html', form=form, nv_plot=nv_plot, salary_bp = salary_bp, table = table)
+    return render_template('test.html', nv_plot=nv_plot, salary_bp = salary_bp, table = table)
     # return nv_plot
 
-@app.route('/login/', methods=['GET', 'POST'])
-def login():
-    form = LoginForm()
-    if form.validate_on_submit():
-        user = db_session.query(User).filter_by(email=form.email.data).first()
-        if user is not None and user.check_password(form.password.data):
-            login_user(user)
-            return redirect(url_for('index'))
-
-        flask.flash('Email or password is wrong.')
-
-        
-    return render_template('login.html', form=form)
-
-
-@app.route('/logout/', methods=['GET', 'POST'])
-def logout():
-    logout_user()
-    return redirect(flask.url_for('index'))
 
 if __name__ == "__main__":
     app.run(debug=True)

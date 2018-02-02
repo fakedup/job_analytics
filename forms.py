@@ -13,9 +13,18 @@ class LoginForm(Form):
         validators=[validators.DataRequired()],
         description='Password')
 
-
-class TestForm(Form):
-    name = wtforms.StringField(
+class SeachForm(Form):
+    
+    keywords = wtforms.StringField(
         validators=[validators.DataRequired()],
-        description='Ключевые слова через запятую'
-    )
+        description='keywords')
+    region = wtforms.SelectField(
+        validators=[validators.DataRequired()],
+        choices=[(1, 'Москва'), (2,'Санкт-Петербург')],
+        description='city-select')
+    date_from = wtforms.StringField(
+        validators=[validators.DataRequired()],
+        description='date_from')
+    date_to = wtforms.StringField(
+        validators=[validators.DataRequired()],
+        description='date_to')
