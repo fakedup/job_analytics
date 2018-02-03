@@ -10,7 +10,7 @@ from sqlalchemy.ext.declarative import declarative_base
 import sqlalchemy as sa
 
 from forms import LoginForm
-from forms import SeachForm
+from forms import SearchForm
 
 from app.analysis import *
 
@@ -69,9 +69,9 @@ class User(Base, UserMixin):
 @app.route("/", methods=['GET', 'POST'])
 def index():
     login_form = LoginForm()
-    seach_form = SeachForm()
+    search_form = SearchForm()
     return render_template(
-        'index.html', method=request.method, seach_form=seach_form,
+        'index.html', method=request.method, search_form=search_form,
         login_form=login_form,
     )
 
@@ -79,12 +79,12 @@ def index():
 @app.route("/result/", methods=['GET', 'POST'])
 def result():
     login_form = LoginForm()
-    seach_form = SeachForm(request.args)
+    search_form = SearchForm(request.args)
     if request.args.get('keywords') is not None:
-        print(seach_form.keywords.data)
-        print(seach_form.region.data)
-        print(seach_form.date_from.data)
-        print(seach_form.date_to.data)
+        print(search_form.keywords.data)
+        print(search_form.region.data)
+        print(search_form.date_from.data)
+        print(search_form.date_to.data)
 
     date_from = request.args.get('date_from') or '2016-09-01'
     date_to = request.args.get('date_to') or '2017-08-31'
@@ -113,15 +113,15 @@ def result():
 
     table = get_titles_pivot (vacancies).to_html()
 
-
     return render_template(
-            'result.html',
-            method=request.method,
-            login_form=login_form,
-            seach_form = seach_form,
-            nv_plot=nv_plot,
-            salary_bp = salary_bp,
-            table = table)
+        'result.html',
+        method=request.method,
+        login_form=login_form,
+        search_form=search_form,
+        nv_plot=nv_plot,
+        salary_bp=salary_bp,
+        table=table,
+    )
 
 
 @app.route('/login/', methods=['GET', 'POST'])
