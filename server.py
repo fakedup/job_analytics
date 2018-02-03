@@ -68,8 +68,13 @@ class User(Base, UserMixin):
 
 @app.route("/", methods=['GET', 'POST'])
 def index():
+    login_form = LoginForm()
     seach_form = SeachForm()
-    return render_template('index.html', method=request.method, seach_form = seach_form)
+    return render_template(
+        'index.html', method=request.method, seach_form=seach_form,
+        login_form=login_form,
+    )
+
 
 @app.route("/result/", methods=['GET', 'POST'])
 def result():
@@ -96,9 +101,11 @@ def result():
 
     search_fields = request.args.get('search_fields') or 'title'
 
-    vacancies = get_vacancies_df (
-    get_vacancies_query (date_from, date_to, keywords, regions, search_fields),
-    dbs)
+    vacancies = get_vacancies_df(
+        get_vacancies_query(
+            date_from, date_to, keywords, regions, search_fields
+        ), dbs
+    )
 
     nv_plot = get_number_vacancies_plot (vacancies, keywords)
 

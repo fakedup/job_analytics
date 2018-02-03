@@ -64,7 +64,7 @@ def get_vacancies_df (query, session = dbs):
         lambda x: str(x.year) + 
         '-' + 
         (str(x.month) if len(str(x.month)) == 2 else '0' + str(x.month)))
-    df['salary'] = df[['salary_from', 'salary_to', 'salary_gross']].apply(calc_avg_salary, axis = 1)
+    df['salary'] = df[['salary_from', 'salary_to', 'salary_gross']].apply(calc_avg_salary, axis=1)
 
     return df
 
