@@ -3,12 +3,11 @@
 
 {% block content %}
 
-
 <div class="col-md-offset-1 col-md-10">
     <form class="form-inline" method="GET" action="/result/" >
         <div class="form-group">
             <label class="sr-only" for="words">Ключевые слова</label>
-            <input type="text" class="form-control" id="words" placeholder="Ключевые слова" name="keywords" value="{{request.args.get('keywords')}}" >
+            <input type="text" class="form-control" id="words" placeholder="Ключевые слова" name="keywords" value="{{seach_form.keywords.data}}" >
 
         </div>
 

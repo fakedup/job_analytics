@@ -4,6 +4,7 @@ from sqlalchemy.ext.declarative import declarative_base
 import datetime
 import os.path
 
+# BASE_DIR = os.path.dirname(os.path.abspath(__file__))
 db_path = 'db/hh_base.db'
 engine = create_engine('sqlite:///'+db_path)
 

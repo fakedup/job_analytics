@@ -68,13 +68,18 @@ class User(Base, UserMixin):
 
 @app.route("/", methods=['GET', 'POST'])
 def index():
+    login_form = LoginForm()
     seach_form = SeachForm()
-    return render_template('index.html', method=request.method, seach_form = seach_form)
+    return render_template(
+        'index.html', method=request.method, seach_form=seach_form,
+        login_form=login_form,
+    )
+
 
 @app.route("/result/", methods=['GET', 'POST'])
 def result():
     login_form = LoginForm()
-    seach_form = SeachForm()
+    seach_form = SeachForm(request.args)
     if request.args.get('keywords') is not None:
         print(seach_form.keywords.data)
         print(seach_form.region.data)
@@ -83,22 +88,24 @@ def result():
 
     date_from = request.args.get('date_from') or '2016-09-01'
     date_to = request.args.get('date_to') or '2017-08-31'
-    
+
     try:
         keywords = request.args.get('keywords').split(',')
     except AttributeError:
         keywords = ['Python']
-    
+
     try:
         regions = [int(x) for x in request.args.get('regions').split(',')]
     except AttributeError:
         regions = [1]
-    
+
     search_fields = request.args.get('search_fields') or 'title'
 
-    vacancies = get_vacancies_df (
-    get_vacancies_query (date_from, date_to, keywords, regions, search_fields), 
-    dbs)
+    vacancies = get_vacancies_df(
+        get_vacancies_query(
+            date_from, date_to, keywords, regions, search_fields
+        ), dbs
+    )
 
     nv_plot = get_number_vacancies_plot (vacancies, keywords)
 
@@ -106,14 +113,14 @@ def result():
 
     table = get_titles_pivot (vacancies).to_html()
 
-    
+
     return render_template(
-            'result.html', 
-            method=request.method, 
+            'result.html',
+            method=request.method,
             login_form=login_form,
-            seach_form = seach_form, 
-            nv_plot=nv_plot, 
-            salary_bp = salary_bp, 
+            seach_form = seach_form,
+            nv_plot=nv_plot,
+            salary_bp = salary_bp,
             table = table)
 
 
@@ -139,24 +146,24 @@ def logout():
 @app.route("/test/", methods=['GET', 'POST'])
 def test():
     # from forms import TestForm
- 
+
     date_from = request.args.get('date_from') or '2016-09-01'
     date_to = request.args.get('date_to') or '2017-08-31'
-    
+
     try:
         keywords = request.args.get('keywords').split(',')
     except AttributeError:
         keywords = ['Python']
-    
+
     try:
         regions = [int(x) for x in request.args.get('regions').split(',')]
     except AttributeError:
         regions = [1]
-    
+
     search_fields = request.args.get('search_fields') or 'title'
 
     vacancies = get_vacancies_df (
-    get_vacancies_query (date_from, date_to, keywords, regions, search_fields), 
+    get_vacancies_query (date_from, date_to, keywords, regions, search_fields),
     dbs)
 
     nv_plot = get_number_vacancies_plot (vacancies, keywords)

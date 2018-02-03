@@ -14,7 +14,7 @@ class LoginForm(Form):
         description='Password')
 
 class SeachForm(Form):
-    
+
     keywords = wtforms.StringField(
         validators=[validators.DataRequired()],
         description='keywords')
