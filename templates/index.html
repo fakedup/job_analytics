@@ -1,0 +1,88 @@
+
+{% extends 'base.html' %}
+
+{% block content %}
+
+<br>
+<center>
+<div class="col-md-offset-1 col-md-10">
+    <form class="form-inline" method="GET" action="/result/" >
+        <div class="form-group">
+            <label class="sr-only" for="words">Ключевые слова</label>
+            <input type="text" class="form-control" id="words" placeholder="Ключевые слова" name=keywords>
+                        {{ seach_form.keywords.data }}
+        </div>
+
+        <div class="input-group">
+          <span class="input-group-addon"><label for="city-select">Город</label></span>
+          <select id="city-select" class="form-control" >
+              <option>Москва</option>
+              <option>Санкт-Петербург</option>
+            </select>
+        </div>
+
+        <div class="form-group">
+            <div class='input-group date' id='datetimepicker6' >
+                <input type='text' class="form-control" placeholder="c" name="date_from"/>
+                <span class="input-group-addon">
+                    <span class="glyphicon glyphicon-calendar"></span>
+                </span>
+            </div>
+        </div>
+
+        <div class="form-group">
+            <div class='input-group date' id='datetimepicker7'>
+                <input type='text' class="form-control" placeholder="по" name="date_to"/>
+                <span class="input-group-addon">
+                    <span class="glyphicon glyphicon-calendar"></span>
+                </span>
+            </div>
+        </div>
+
+        <button type="submit" class="btn btn-default">Поиск</button>
+
+    </form>
+</div>
+
+
+</div><!-- /.row -->
+
+<!-- <div class="container">
+    <div class='col-md-2'>
+        <div class="form-group">
+            <div class='input-group date' id='datetimepicker6' >
+                <input type='text' class="form-control" placeholder="c" name="date_from"/>
+                <span class="input-group-addon">
+                    <span class="glyphicon glyphicon-calendar"></span>
+                </span>
+            </div>
+        </div>
+    </div>
+    <div class='col-md-2'>
+        <div class="form-group">
+            <div class='input-group date' id='datetimepicker7'>
+                <input type='text' class="form-control" placeholder="по" name="date_tobk,kbhj"/>
+                <span class="input-group-addon">
+                    <span class="glyphicon glyphicon-calendar"></span>
+                </span>
+            </div>
+        </div>
+    </div>
+</div> -->
+<script type="text/javascript">
+    $(function () {
+        $('#datetimepicker6').datetimepicker();
+        $('#datetimepicker7').datetimepicker({
+            useCurrent: false //Important! See issue #1075
+        });
+        $("#datetimepicker6").on("dp.change", function (e) {
+            $('#datetimepicker7').data("DateTimePicker").minDate(e.date);
+        });
+        $("#datetimepicker7").on("dp.change", function (e) {
+            $('#datetimepicker6').data("DateTimePicker").maxDate(e.date);
+        });
+    });
+</script>
+</center>
+
+{% endblock %}

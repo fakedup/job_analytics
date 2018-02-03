@@ -1,0 +1,23 @@
+<form action="{{ url_for('test') }}" method="get">
+    {{ form.name }}
+
+    {% if form.name.errors %}
+      <ul>
+        {% for error in form.name.errors %}
+            <li>{{ error }}</li>
+        {% endfor %}
+      </ul>
+    {% endif %}
+    <input type="submit">
+</form>
+
+<div>
+{{ nv_plot|safe }}
+</div>
+<div>
+{{ salary_bp|safe }}
+</div>
+
+<div>
+{{ table|safe}}
+</div>

@@ -1,0 +1,59 @@
+
+{% extends 'base.html' %}
+
+{% block content %}
+
+
+<div class="col-md-offset-1 col-md-10">
+    <form class="form-inline" method="GET" action="/result/" >
+        <div class="form-group">
+            <label class="sr-only" for="words">Ключевые слова</label>
+            <input type="text" class="form-control" id="words" placeholder="Ключевые слова" name="keywords" value="{{request.args.get('keywords')}}" >
+
+        </div>
+
+        <div class="input-group">
+          <span class="input-group-addon"><label for="city-select">Город</label></span>
+          <select id="city-select" class="form-control" name="city-select" value="{{request.args.get('city-select')}}">
+              <option>Москва</option>
+              <option>Санкт-Петербург</option>
+            </select>
+        </div>
+
+        <div class="form-group">
+            <div class='input-group date' id='datetimepicker6' >
+                <input type='text' class="form-control" placeholder="c" name="date_from" value="{{request.args.get('date_from')}}"/>
+                <span class="input-group-addon">
+                    <span class="glyphicon glyphicon-calendar"></span>
+                </span>
+            </div>
+        </div>
+
+        <div class="form-group">
+            <div class='input-group date' id='datetimepicker7'>
+                <input type='text' class="form-control" placeholder="по" name="date_to" value="{{request.args.get('date_to')}}"/>
+                <span class="input-group-addon">
+                    <span class="glyphicon glyphicon-calendar"></span>
+                </span>
+            </div>
+        </div>
+
+        <button type="submit" class="btn btn-default">Поиск</button>
+
+    </form>
+</div>
+
+<center>
+<div>
+{{ nv_plot|safe }}
+</div>
+<div>
+{{ salary_bp|safe }}
+</div>
+<div>
+{{ table|safe}}
+</div>
+</center>
+
+
+{% endblock %}
