@@ -68,9 +68,8 @@ class User(Base, UserMixin):
 
 @app.route("/", methods=['GET', 'POST'])
 def index():
-    login_form = LoginForm()
     seach_form = SeachForm()
-    return render_template('index.html', method=request.method, login_form=login_form, seach_form = seach_form)
+    return render_template('index.html', method=request.method, seach_form = seach_form)
 
 @app.route("/result/", methods=['GET', 'POST'])
 def result():
