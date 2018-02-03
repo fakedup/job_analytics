@@ -14,13 +14,13 @@ class LoginForm(Form):
         description='Password')
 
 class SeachForm(Form):
-    
+
     keywords = wtforms.StringField(
         validators=[validators.DataRequired()],
         description='keywords')
     region = wtforms.SelectField(
         validators=[validators.DataRequired()],
-        choices=[(1, 'Москва'), (2,'Санкт-Петербурк')],
+        choices=[(1, 'Москва'), (2,'Санкт-Петербург')],
         description='city-select')
     date_from = wtforms.StringField(
         validators=[validators.DataRequired()],

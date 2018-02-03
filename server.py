@@ -12,6 +12,8 @@ import sqlalchemy as sa
 from forms import LoginForm
 from forms import SeachForm
 
+from app.analysis import *
+
 app = flask.Flask(__name__)
 app.config.from_object('config')  # !!!!!!!!!!!!!!!!!!!!!!!!!!!#
 
@@ -66,19 +68,53 @@ class User(Base, UserMixin):
 
 @app.route("/", methods=['GET', 'POST'])
 def index():
-    login_form = LoginForm()
-    form = SeachForm(request.form)
-    return render_template('index.html', method=request.method, login_form=login_form, seach_form = form)
+    seach_form = SeachForm()
+    return render_template('index.html', method=request.method, seach_form = seach_form)
 
-@app.route("/result/")
+@app.route("/result/", methods=['GET', 'POST'])
 def result():
+    login_form = LoginForm()
     seach_form = SeachForm(request.args)
-    print(seach_form.region.data)
-    print(seach_form.keywords.data)
-    print(seach_form.date_to.data)
-    print(seach_form.date_from.data)
+    if request.args.get('keywords') is not None:
+        print(seach_form.keywords.data)
+        print(seach_form.region.data)
+        print(seach_form.date_from.data)
+        print(seach_form.date_to.data)
 
-    return render_template('result.html', method=request.method, seach_form = seach_form)
+    date_from = request.args.get('date_from') or '2016-09-01'
+    date_to = request.args.get('date_to') or '2017-08-31'
+
+    try:
+        keywords = request.args.get('keywords').split(',')
+    except AttributeError:
+        keywords = ['Python']
+
+    try:
+        regions = [int(x) for x in request.args.get('regions').split(',')]
+    except AttributeError:
+        regions = [1]
+
+    search_fields = request.args.get('search_fields') or 'title'
+
+    vacancies = get_vacancies_df (
+    get_vacancies_query (date_from, date_to, keywords, regions, search_fields),
+    dbs)
+
+    nv_plot = get_number_vacancies_plot (vacancies, keywords)
+
+    salary_bp = get_salaries_boxplot (vacancies)
+
+    table = get_titles_pivot (vacancies).to_html()
+
+
+    return render_template(
+            'result.html',
+            method=request.method,
+            login_form=login_form,
+            seach_form = seach_form,
+            nv_plot=nv_plot,
+            salary_bp = salary_bp,
+            table = table)
 
 
 @app.route('/login/', methods=['GET', 'POST'])
@@ -99,6 +135,44 @@ def login():
 def logout():
     logout_user()
     return redirect(flask.url_for('index'))
+
+@app.route("/test/", methods=['GET', 'POST'])
+def test():
+    # from forms import TestForm
+
+    date_from = request.args.get('date_from') or '2016-09-01'
+    date_to = request.args.get('date_to') or '2017-08-31'
+
+    try:
+        keywords = request.args.get('keywords').split(',')
+    except AttributeError:
+        keywords = ['Python']
+
+    try:
+        regions = [int(x) for x in request.args.get('regions').split(',')]
+    except AttributeError:
+        regions = [1]
+
+    search_fields = request.args.get('search_fields') or 'title'
+
+    vacancies = get_vacancies_df (
+    get_vacancies_query (date_from, date_to, keywords, regions, search_fields),
+    dbs)
+
+    nv_plot = get_number_vacancies_plot (vacancies, keywords)
+
+    salary_bp = get_salaries_boxplot (vacancies)
+
+    table = get_titles_pivot (vacancies).to_html()
+
+    form = TestForm(flask.request.args)
+
+    # if form.validate():
+    #     pass # Генерируем график
+
+    return render_template('test.html', nv_plot=nv_plot, salary_bp = salary_bp, table = table)
+    # return nv_plot
+
 
 if __name__ == "__main__":
     app.run(debug=True)
