@@ -10,6 +10,7 @@ from sqlalchemy.ext.declarative import declarative_base
 import sqlalchemy as sa
 
 from forms import LoginForm
+from forms import SeachForm
 
 app = flask.Flask(__name__)
 app.config.from_object('config')  # !!!!!!!!!!!!!!!!!!!!!!!!!!!#
@@ -66,11 +67,18 @@ class User(Base, UserMixin):
 @app.route("/", methods=['GET', 'POST'])
 def index():
     login_form = LoginForm()
-    return render_template('index.html', method=request.method, login_form=login_form, date_list=[
-            '2000-01-01',
-            '2000-01-02',
-            '2000-01-03',
-        ])
+    form = SeachForm(request.form)
+    return render_template('index.html', method=request.method, login_form=login_form, seach_form = form)
+
+@app.route("/result/")
+def result():
+    seach_form = SeachForm(request.args)
+    print(seach_form.region.data)
+    print(seach_form.keywords.data)
+    print(seach_form.date_to.data)
+    print(seach_form.date_from.data)
+
+    return render_template('result.html', method=request.method, seach_form = seach_form)
 
 
 @app.route('/login/', methods=['GET', 'POST'])
@@ -84,7 +92,6 @@ def login():
 
         flask.flash('Email or password is wrong.')
 
-        
     return render_template('login.html', form=form)
 
 
